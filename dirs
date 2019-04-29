@@ -1,0 +1,9 @@
+# alias config dir
+bashrc=~/.bashrc
+
+# vim config dir
+vimConfig=~/.vimrc
+
+# base dir
+baseDir=/lee/tools
+
