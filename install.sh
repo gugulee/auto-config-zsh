@@ -1,7 +1,12 @@
-# when run script by source, $0 is bash
-if [ "$0" != "-bash" ];then
-    echo "please run script use 'source ${0##*/}'"
-        exit 1
+if ! `which zsh &>/dev/null`;then
+    echo "please install zsh first (yum -y install zsh)"
+    exit 1
+fi
+
+ls ~/.zshrc &>/dev/null
+if [ $? != 0 ];then
+	echo "please install oh-my-zsh first (sh -c \"$(wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)\")"
+	exit 1
 fi
 
 toolDir=$(cd "$(dirname "${BASH_ARGV[0]}")";pwd)
@@ -11,24 +16,9 @@ saveDir=$(pwd)
 
 # check dirs
 echo "check dirs"
-[ -z $bashrc ] && exit 1
 [ -z $vimConfig ] && exit 1
 [ -z $baseDir ] && exit 1
-
-# alias config
-echo "set alias"
-if ! grep "custom config" $bashrc &>/dev/null;then
-cat >> $bashrc <<EOF
-# custom config
-alias l='ls -lrh'
-alias grep='grep --color=auto'
-alias pss='ps -ef |grep -v grep |grep'
-alias ..="cd .."
-alias he="history -a" # export history
-alias hi="history -n" # import history
-# end custom
-EOF
-fi
+[ -z $zshDir ] && exit 1
 
 # vim config
 echo "set vim"
@@ -60,36 +50,47 @@ fi
 
 # Productivity tool
 #
-#autojump
-echo "install autojump"
-autojumpDir=$baseDir/autojump
-if [ ! -d $autojumpDir ];then
-    echo "download autojump"
+# install autojump
+tool="autojump"
+echo "install $tool"
+toolDir=$baseDir/$tool
+if [ ! -d $toolDir ];then
+    echo "download $tool"
 	cd $baseDir
 	git clone git://github.com/wting/autojump.git 2>&1 1>/dev/null
 fi
 
-[ ! -d $autojumpDir ] && exit 1
+[ ! -d $toolDir ] && exit 1
 
-cd $autojumpDir && ./install.py 2>&1 1>/dev/null
+cd $toolDir && ./install.py 2>&1 1>/dev/null
 
-if [[ -s ~/.autojump/etc/profile.d/autojump.sh ]];then
-	. ~/.autojump/etc/profile.d/autojump.sh
-	if ! grep "autojump config" $bashrc &>/dev/null;then
-cat >> $bashrc <<EOF
-# autojump config
-. ~/.autojump/etc/profile.d/autojump.sh
+if [[ ! -s ~/.autojump/etc/profile.d/autojump.sh ]];then
+	echo "$tool install failed"
+fi
+
+#config on-my-zsh
+echo "set on-my-zsh"
+
+# set autojump
+echo "set $tool"
+oldPlugins=$(grep -E "^plugins=" $zshDir)
+oldPlugins=${oldPlugins#*\(}
+oldPlugins=${oldPlugins%\)*}
+
+if ! echo $oldPlugins | grep $tool &>/dev/null;then
+	newPlugins="plugins=($oldPlugins $tool)"
+	sed -i "s/plugins=.*/$newPlugins/g" $zshDir
+fi
+
+if ! grep "# autojump" $zshDir &>/dev/null;then
+cat >> $zshDir <<EOF
+# autojump
+[[ -s /root/.autojump/etc/profile.d/autojump.sh ]] && source /root/.autojump/etc/profile.d/autojump.sh
 # end autojump
 EOF
-	fi
 fi
 
-if ! `which autojump &>/dev/null`;then
-    echo "autojump install failed"
-    exit 1
-fi
-
-echo "autojump install succeed"
-
-. $bashrc
 cd $saveDir
+
+echo
+echo "==============Please restart terminal(s)=============="
