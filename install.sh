@@ -12,7 +12,7 @@ fi
 toolDir=$(cd "$(dirname "${BASH_ARGV[0]}")";pwd)
 
 . $toolDir/dirs
-saveDir=$(pwd)
+. $toolDir/config.sh
 
 # check dirs
 echo "check dirs"
@@ -51,11 +51,10 @@ fi
 # Productivity tool
 #
 # install autojump
-tool="autojump"
-echo "install $tool"
-toolDir=$baseDir/$tool
+echo "install autojump"
+toolDir=$baseDir/autojump
 if [ ! -d $toolDir ];then
-    echo "download $tool"
+    echo "download autojump"
 	cd $baseDir
 	git clone git://github.com/wting/autojump.git 2>&1 1>/dev/null
 fi
@@ -65,32 +64,31 @@ fi
 cd $toolDir && ./install.py 2>&1 1>/dev/null
 
 if [[ ! -s ~/.autojump/etc/profile.d/autojump.sh ]];then
-	echo "$tool install failed"
+	echo "autojump install failed"
 fi
+
+# install zsh-autosuggestions
+echo "install zsh-autosuggestions"
+toolDir=${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+if [ ! -d $toolDir ];then
+    echo "download zsh-autosuggestions"
+	git clone https://github.com/zsh-users/zsh-autosuggestions $toolDir 2>&1 1>/dev/null
+fi
+
+[ ! -d $toolDir ] && exit 1
 
 #config on-my-zsh
 echo "set on-my-zsh"
 
 # set autojump
-echo "set $tool"
-oldPlugins=$(grep -E "^plugins=" $zshDir)
-oldPlugins=${oldPlugins#*\(}
-oldPlugins=${oldPlugins%\)*}
+echo "set autojump"
+content="[[ -s /root/.autojump/etc/profile.d/autojump.sh ]] && source /root/.autojump/etc/profile.d/autojump.sh"
+setOhMyZsh "autojump" "$zshDir" "$content"
 
-if ! echo $oldPlugins | grep $tool &>/dev/null;then
-	newPlugins="plugins=($oldPlugins $tool)"
-	sed -i "s/plugins=.*/$newPlugins/g" $zshDir
-fi
-
-if ! grep "# autojump" $zshDir &>/dev/null;then
-cat >> $zshDir <<EOF
-# autojump
-[[ -s /root/.autojump/etc/profile.d/autojump.sh ]] && source /root/.autojump/etc/profile.d/autojump.sh
-# end autojump
-EOF
-fi
-
-cd $saveDir
+# set zsh-autosuggestions
+echo "set zsh-autosuggestions"
+content="export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE=\"fg=3\""
+setOhMyZsh "zsh-autosuggestions" "$zshDir" "$content"
 
 echo
 echo "==============Please restart terminal(s)=============="

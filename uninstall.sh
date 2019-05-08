@@ -1,8 +1,8 @@
 #!/bin/bash
 
 toolDir=$(cd "$(dirname "$0")";pwd)
-source $toolDir/dirs
-saveDir=`pwd`
+. $toolDir/dirs
+. $toolDir/config.sh
 
 # check dirs
 echo "check dirs"
@@ -18,31 +18,17 @@ rm -f $vimConfig
 echo "unset oh-my-mysh"
 
 # unset autojump
-tool="autojump"
-echo "unset $tool"
-begin=$(cat $zshDir | grep -n "# autojump" | cut -d ":" -f 1)
-end=$(cat $zshDir | grep -n "# end autojump" | cut -d ":" -f 1)
-if [ ! -z $begin ] && [ ! -z $end ]; then
-	sed -i "$begin,$end d" $zshDir
-fi
+echo "unset autojump"
+unSetOhMyZsh "autojump" "$zshDir"
 
-oldPlugins=$(grep -E "^plugins=" ~/.zshrc)
-oldPlugins=${oldPlugins#*\(}
-oldPlugins=${oldPlugins%\)*}
+echo "unset zsh-autosuggestions"
+unSetOhMyZsh "zsh-autosuggestions" "$zshDir"
 
-if echo $oldPlugins | grep $tool &>/dev/null;then
-	newPlugins=`echo $oldPlugins | sed "s|$tool||g"`
-	newPlugins=`echo $newPlugins | sed -e 's/^[ ]*//g' | sed -e 's/[ ]*$//g'`
-	newPlugins="plugins=($newPlugins)"
-	sed -i "s/^plugins=.*/$newPlugins/g" $zshDir
-fi
-
+# uninstall autojump
 echo "uninstall autojump"
 autojumpDir=$baseDir/autojump
 [ ! -d $autojumpDir ] && exit 1
 cd $autojumpDir && ./uninstall.py 2>&1 1>/dev/null
-
-cd $saveDir
 
 echo
 echo "==============Please restart terminal(s)=============="
