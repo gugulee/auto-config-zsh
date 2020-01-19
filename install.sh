@@ -1,3 +1,5 @@
+#!/bin/bash
+
 if ! `which zsh &>/dev/null`;then
     echo "please install zsh first (yum -y install zsh)"
     exit 1
@@ -5,7 +7,7 @@ fi
 
 ls ~/.zshrc &>/dev/null
 if [ $? != 0 ];then
-	echo "please install oh-my-zsh first (sh -c \"$(wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)\")"
+	echo "please install oh-my-zsh first (https://github.com/ohmyzsh/ohmyzsh)"
 	exit 1
 fi
 
@@ -31,7 +33,7 @@ EOF
 fi	
 
 # validate network
-if ! `curl -k www.github.com &>/dev/null` ;then
+if ! `curl -k https://github.com &>/dev/null` ;then
 	echo "connect www.github.com failed"
 	exit 1
 fi
@@ -56,7 +58,7 @@ toolDir=$baseDir/autojump
 if [ ! -d $toolDir ];then
     echo "download autojump"
 	cd $baseDir
-	git clone git://github.com/wting/autojump.git 2>&1 1>/dev/null
+	git clone https://github.com/wting/autojump.git 2>&1 1>/dev/null
 fi
 
 [ ! -d $toolDir ] && exit 1
